@@ -1,5 +1,6 @@
 package top.sharehome.lambda;
 
+import java.beans.Customizer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -90,7 +91,7 @@ public class Lambda {
 
         // 由上可知Lambda表达式可以简化实例的创建，可能对于业务逻辑来说这种写法并不能体现出优势，如果涉及到大数据或者游戏方面的需要对数据做不断地计算时，函数式接口是一个较为完美的解决方案
         // 下面来简化一下经常用到的一些代码写法，例如给包含英文名称的集合倒叙排序：
-        List<String> names = new ArrayList<>() {
+        List<String> names = new ArrayList<String>() {
             {
                 add("Alice");
                 add("Bob");
@@ -148,14 +149,48 @@ public class Lambda {
     }
 
     /**
-     * todo 3、综合示例：
+     * 3、综合示例：
      * （1）使用提供者提供一个字符串
      * （2）使用断言判断这个字符串是不是数字（正则表达式 "-?\\d+(\\.\\d+)?" ）
      * （3）使用多功能函数写一个字符串转数字
      * （4）使用消费者打印该数字是奇数还是偶数
+     * （5）将以上内容串起来，即判断一个字符串是奇数还是偶数
      */
     public static void comprehensiveExample() {
+        // 使用提供者提供一个字符串
+        Supplier<String> supplier = () -> "46";
+        // 使用断言判断这个字符串是不是数字（正则表达式 "-?\\d+(\\.\\d+)?" ）
+        Predicate<String> predicate = (str) -> str.matches("-?\\d+(\\.\\d+)?");
+        // 使用多功能函数写一个字符串转数字
+        Function<String, Integer> function = Integer::parseInt;
+        // 使用消费者打印该数字是奇数还是偶数
+        Consumer<Integer> consumer = (num) -> {
+            if (num % 2 == 0) {
+                System.out.println(num + "是偶数");
+            } else {
+                System.out.println(num + "是奇数");
+            }
+        };
+        // 判断一个字符串是奇数还是偶数
+        myFuncMethod(supplier, predicate, function, consumer);
 
+        // 当抽离成函数之后，以上内容还能写成如下内容：
+        myFuncMethod(() -> "46",
+                str -> str.matches("-?\\d+(\\.\\d+)?"),
+                Integer::parseInt,
+                num -> System.out.println(num % 2 == 0 ? num + "是偶数" : num + "是奇数"));
+    }
+
+    private static void myFuncMethod(
+            Supplier<String> supplier,
+            Predicate<String> predicate,
+            Function<String, Integer> function,
+            Consumer<Integer> consumer) {
+        if (predicate.test(supplier.get())) {
+            consumer.accept(function.apply(supplier.get()));
+        } else {
+            System.out.println("该字符串不是数字");
+        }
     }
 
     /**
@@ -167,8 +202,7 @@ public class Lambda {
     public static void main(String[] args) {
         simplifyInstances();
         paramsReturnType();
-        // 使用Lambda表达式的最佳时机：
-        // 1、以后调用
+        comprehensiveExample();
     }
 
 }
