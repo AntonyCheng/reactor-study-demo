@@ -1,10 +1,13 @@
 package top.sharehome.demo02stream;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Random;
 import java.util.stream.Stream;
 
 /**
- * Stream演示类
+ * Stream示例代码
  *
  * @author AntonyCheng
  */
@@ -50,7 +53,7 @@ public class StreamDemo {
                         .map(integer -> "最大的偶数是：" + integer)
                         .orElse("随机数中没有偶数")
         );
-        // 从上面这个例题来看，Stream这样的声明式编程（基于事件机制的回调函数，只给出算子指令【filter、max等】就能够得到相应地答案）能够极大的简化代码逻辑，具有以下特点：
+        // 从上面这个例题来看，Stream这样的响应式编程（基于事件机制的回调函数，只给出算子指令【filter、max等】就能够得到相应地答案）能够极大的简化代码逻辑，具有以下特点：
         //（1）Stream的运算分为三个步骤：封装流（由迭代器转换为Stream类型）-->定义流式操作（过滤、转换或者筛选等）-->获取最终结果（最大值、最小值或者收集为集合等）
         //     这三个步骤分别流的三大部分：
         //     1）一个数据流：创建流的常用方法有Collection.stream()、Stream.of()、Stream.builder()、Stream.concat();
