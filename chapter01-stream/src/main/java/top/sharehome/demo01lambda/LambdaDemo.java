@@ -1,10 +1,8 @@
-package top.sharehome.lambda;
+package top.sharehome.demo01lambda;
 
-import java.beans.Customizer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -57,7 +55,7 @@ interface AnnotationInterface {
  *
  * @author AntonyCheng
  */
-public class Lambda {
+public class LambdaDemo {
 
     /**
      * 1、Lambda简化函数式接口实例创建的实例方法
@@ -165,11 +163,7 @@ public class Lambda {
         Function<String, Integer> function = Integer::parseInt;
         // 使用消费者打印该数字是奇数还是偶数
         Consumer<Integer> consumer = (num) -> {
-            if (num % 2 == 0) {
-                System.out.println(num + "是偶数");
-            } else {
-                System.out.println(num + "是奇数");
-            }
+            System.out.println(num % 2 == 0 ? num + "是偶数" : num + "是奇数");
         };
         // 判断一个字符串是奇数还是偶数
         myFuncMethod(supplier, predicate, function, consumer);
@@ -194,7 +188,7 @@ public class Lambda {
     }
 
     /**
-     * 方法主入口
+     * 方法入口
      *
      * @param args 参数
      * @author AntonyCheng
