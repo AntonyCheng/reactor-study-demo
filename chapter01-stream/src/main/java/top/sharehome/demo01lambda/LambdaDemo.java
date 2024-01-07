@@ -62,7 +62,7 @@ public class LambdaDemo {
      *
      * @author AntonyCheng
      */
-    public static void simplifyInstances() {
+    private static void simplifyInstances() {
 
         // 1、以前使用接口的方式一般是写一个Impl实现类或者直接使用匿名实现，这里演示匿名实现的效果
         // 匿名实现如下：
@@ -117,7 +117,7 @@ public class LambdaDemo {
      *
      * @author AntonyCheng
      */
-    public static void paramsReturnType() {
+    private static void paramsReturnType() {
         // 1、消费者函数：打印入参x
         Consumer<String> consumer = x -> System.out.println(x + x);
         consumer.accept("x");
@@ -154,7 +154,7 @@ public class LambdaDemo {
      * （4）使用消费者打印该数字是奇数还是偶数
      * （5）将以上内容串起来，即判断一个字符串是奇数还是偶数
      */
-    public static void comprehensiveExample() {
+    private static void comprehensiveExample() {
         // 使用提供者提供一个字符串
         Supplier<String> supplier = () -> "46";
         // 使用断言判断这个字符串是不是数字（正则表达式 "-?\\d+(\\.\\d+)?" ）
