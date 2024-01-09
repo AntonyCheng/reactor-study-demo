@@ -1,0 +1,69 @@
+# 服务概况 ---- 可自定义
+server:
+  port: 38080
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://xxx.xxx.xxx.xxx:3306/demo?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
+    username: root
+    password: 123456
+    # HikariCP连接池配置（性能较好，模板首选【dataSourceClassName: com.zaxxer.hikari.HikariDataSource】）
+    hikari:
+      # 连接池名称
+      pool-name: HikariCP
+      # 连接池最小连接数量
+      minimum-idle: 10
+      # 连接池最大连接数量
+      maximum-pool-size: 25
+      # 配置连接超时时间
+      connection-timeout: 30000
+      # 多久检查一次连接的活性（小于30000即不进行活性检查）
+      keepalive-time: 60000
+      # 校验超时时间
+      validation-timeout: 5000
+      # 控制从池返回的连接的默认自动提交行为，默认值：true
+      auto-commit: true
+      # 空闲连接存活最大时间，默认10分钟
+      idle-timeout: 600000
+      # 池中连接的最长生命周期，值0表示无限生命周期，设置30分钟
+      max-lifetime: 1800000
+      # 配置检测连接是否有效
+      connection-test-query: SELECT 1 FROM DUAL
+# MyBatisPlus配置
+# https://baomidou.com/config/
+mybatis-plus:
+  # 启动时是否检查 MyBatis XML 文件的存在，默认不检查
+  check-config-location: false
+  # 对应的 XML 文件位置
+  mapper-locations: classpath:mapper/*Mapper.xml
+  # 实体扫描，多个package用逗号或者分号分隔
+  type-aliases-package: top.sharehome.*.*.entity
+  configuration:
+    # 自动驼峰命名规则（camel case）映射
+    map-underscore-to-camel-case: false
+    # MyBatis 自动映射策略
+    # NONE 不启用；PARTIAL 只对非嵌套；resultMap 自动映射；FULL 对所有；resultMap 自动映射；
+    auto-mapping-behavior: PARTIAL
+    # MyBatis 自动映射时未知列或未知属性处理策
+    # NONE 不做处理； WARNING 打印相关警告；FAILING 抛出异常和详细信息；
+    auto-mapping-unknown-column-behavior: NONE
+    # 更详细的日志输出 会有性能损耗 org.apache.ibatis.logging.stdout.StdOutImpl
+    # 关闭日志记录 (可单纯使用 p6spy 分析) org.apache.ibatis.logging.nologging.NoLoggingImpl
+    # 默认日志输出 org.apache.ibatis.logging.slf4j.Slf4jImpl
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    # 是否打印 Logo banner
+    banner: true
+    db-config:
+      # 主键类型
+      # AUTO 自增；NONE 空；INPUT 用户输入；ASSIGN_ID 雪花算法；ASSIGN_UUID 排除中划线的UUID；UUID 普通的UUID；
+      id-type: ASSIGN_ID
+      # 逻辑删除的字段
+      logic-delete-field: delFlag
+      # 逻辑已删除值
+      logic-delete-value: 1
+      # 逻辑未删除值
+      logic-not-delete-value: 0
+      insert-strategy: not_null
+      update-strategy: not_null
+      where-strategy: not_null

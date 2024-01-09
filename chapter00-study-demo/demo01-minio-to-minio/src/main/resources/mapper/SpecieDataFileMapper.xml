@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="top.sharehome.demo.mapper.SpecieDataFileMapper">
+
+    <resultMap id="BaseResultMap" type="top.sharehome.demo.model.entity.SpecieDataFile">
+            <id property="specieDataFileId" column="specie_data_file_id" jdbcType="VARCHAR"/>
+            <result property="path" column="path" jdbcType="VARCHAR"/>
+            <result property="fileType" column="file_type" jdbcType="VARCHAR"/>
+            <result property="specieDataCameraId" column="specie_data_camera_id" jdbcType="VARCHAR"/>
+            <result property="effective" column="effective" jdbcType="VARCHAR"/>
+            <result property="redrawFlag" column="redraw_flag" jdbcType="CHAR"/>
+            <result property="deviceId" column="device_id" jdbcType="VARCHAR"/>
+            <result property="photographTime" column="photograph_time" jdbcType="TIMESTAMP"/>
+            <result property="createBy" column="create_by" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateBy" column="update_by" jdbcType="VARCHAR"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="deleteBy" column="delete_by" jdbcType="VARCHAR"/>
+            <result property="deleteTime" column="delete_time" jdbcType="TIMESTAMP"/>
+            <result property="delFlag" column="del_flag" jdbcType="CHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        specie_data_file_id,path,file_type,
+        specie_data_camera_id,effective,redraw_flag,
+        device_id,photograph_time,create_by,
+        create_time,update_by,update_time,
+        delete_by,delete_time,del_flag
+    </sql>
+</mapper>
