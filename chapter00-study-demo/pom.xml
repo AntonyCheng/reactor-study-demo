@@ -13,6 +13,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>demo01-minio-to-minio</module>
+        <module>demo02-test-reactor-performance</module>
     </modules>
 
     <properties>
