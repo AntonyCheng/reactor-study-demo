@@ -103,9 +103,9 @@ public class FlowDemo {
             @Override
             public void onSubscribe(Flow.Subscription subscription) {
                 System.out.println(Thread.currentThread() + " 订阅者1号开始订阅：" + subscription);
+                this.subscription = subscription;
                 // 向缓存请求一条数据以便于激活订阅者
                 subscription.request(1);
-                this.subscription = subscription;
             }
 
             // 在下一个元素到达时，即接收到数据时
@@ -142,9 +142,9 @@ public class FlowDemo {
             @Override
             public void onSubscribe(Flow.Subscription subscription) {
                 System.out.println(Thread.currentThread() + " 订阅者2号开始订阅：" + subscription);
+                this.subscription = subscription;
                 // 向缓存请求一条数据以便于激活订阅者
                 subscription.request(1);
-                this.subscription = subscription;
             }
 
             // 在下一个元素到达时，即接收到数据时

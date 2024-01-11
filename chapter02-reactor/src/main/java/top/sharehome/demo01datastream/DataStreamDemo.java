@@ -1,9 +1,22 @@
 package top.sharehome.demo01datastream;
 
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+import reactor.core.CoreSubscriber;
+import reactor.core.Disposable;
+import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.SignalType;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * 数据流示例代码
@@ -24,6 +37,7 @@ import java.time.Duration;
 public class DataStreamDemo {
 
     /**
+     * 1、基础数据流的示例，这是基础中的基础
      * 以Flux类型数据流为例，Mono类型数据流方法与其一致
      */
     private static void flux() {
@@ -36,6 +50,8 @@ public class DataStreamDemo {
                     int i = 10 / data;
                     return data;
                 })
+                // 并发，在名为"sync"的执行器上开启三个线程执行
+                //.parallel().runOn(Schedulers.newParallel("sync",3))
                 // 当流被开始订阅时
                 .doOnSubscribe(subscription -> System.out.println("流被开始订阅时：" + subscription))
                 // 当数据流到达时对数据中的数据元素做处理
@@ -50,7 +66,7 @@ public class DataStreamDemo {
                 .doOnComplete(() -> System.out.println("数据流完成"))
                 // 当流被取消时
                 .doOnCancel(() -> System.out.println("数据流取消"))
-                // 流被处理完，无论结果如何都需要做的操作
+                // 流被处理完，无论结果如何都需要做的操作（对并发数据流无效）
                 .doFinally(signalType -> System.out.println("数据流结束于：" + signalType))
                 // 订阅者订阅数据的操作
                 .subscribe(
@@ -78,17 +94,183 @@ public class DataStreamDemo {
     }
 
     /**
+     * 2、数据流的创建，以不同方式创建1-10的数据流
+     */
+    private static void create() {
+
+        // 1、使用just创建数据流
+        Flux<Integer> just = Flux.just(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        just.subscribe();
+
+        // 2、使用range创建数据流
+        Flux<Integer> range = Flux.range(1, 10);
+        range.subscribe();
+
+        // 3、使用fromStream创建数据流
+        Stream<Integer> integerStream = Stream.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        Flux<Integer> fromStream = Flux.fromStream(integerStream);
+        fromStream.subscribe();
+
+        // 4、使用fromArray创建数据流
+        Integer[] ints = new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        Flux<Integer> fromArray = Flux.fromArray(ints);
+        fromArray.subscribe();
+
+        // 5、使用fromIterable创建数据流
+        List<Integer> iterator = new ArrayList<Integer>() {
+            {
+                for (int i = 1; i < 11; i++) {
+                    add(i);
+                }
+            }
+        };
+        Flux<Integer> fromIterable = Flux.fromIterable(iterator);
+        fromIterable.subscribe();
+
+        // 6、使用响应式流创建数据流
+        Flux<Integer> from = Flux.from(Flux.just(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+        from.subscribe();
+
+    }
+
+    /**
+     * 3、流的订阅
+     */
+    private static void subscribe() throws InterruptedException {
+
+        // 创建一个流
+        Flux<Integer> flux = Flux
+                .range(1, 10)
+                .map(data -> {
+                    if (data == 8) {
+                        data = data / 0; // data等于8时，流数据发生异常
+                    }
+                    System.out.println("map..." + data);
+                    return data;
+                });
+
+        // 1、subscribe() 空参方法可以用来激活流，但是不进行任何操作，如果流没有设置异常处理机制并遇到异常，整个数据流会被终止；
+        flux.subscribe();
+
+        System.out.println();
+        Thread.sleep(2000);
+
+        // 2、subscribe(Consumer) 传入消费者，表示消费正常流数据，如果流没有设置异常处理机制并遇到异常，整个数据流会被终止；
+        flux.subscribe(data -> System.out.println("consumer..." + data));
+
+        System.out.println();
+        Thread.sleep(2000);
+
+        // 3、subscribe(Consumer,Error) 传入消费者和异常处理器，表示消费正常数据，如果流没有设置异常处理机制并遇到异常，会处理异常，但是整个数据流会被终止；
+        flux.subscribe(data -> System.out.println("consumer..." + data) // 正常数据处理
+                , error -> System.out.println("error..." + error)); // 异常数据处理
+
+        System.out.println();
+        Thread.sleep(2000);
+
+        // 4、subscribe(Consumer,Error,Complete) 传入消费者、异常处理器和数据流全部消费成功处理器，如果流没有设置异常处理机制并遇到异常，会处理异常，但是整个数据流会被终止，进而不会执行到消费成功处理器；
+        flux.subscribe(data -> System.out.println("consumer..." + data),
+                error -> System.out.println("error..." + error),
+                () -> System.out.println("success... done"));
+
+        System.out.println("以上四种均能够调用flux.subscribe().isDisposed()查看流是否结束");
+        Thread.sleep(2000);
+
+        // 5、使用CoreSubscriber接口来进行消费，它和4中的方式大同小异，它需要在onSubscribe方法中手动开启订阅，当然这也代表它能在开启订阅时做一些操作，但是一般不用这个接口，
+        //    如果流没有设置异常处理机制并遇到异常，会处理异常，无论异常之后是否开启订阅，整个数据流都会被终止
+        flux.subscribe(new CoreSubscriber<Integer>() {
+
+            // 先将绑定关系保存上
+            private Subscription subscription;
+
+            @Override
+            public void onSubscribe(Subscription s) {
+                System.out.println("subscribe...");
+                // 在开启订阅之前手动保存绑定关系
+                this.subscription = s;
+                // 手动开启首轮订阅，即：从数据流中取出第1/n个数据
+                s.request(1);
+            }
+
+            @Override
+            public void onNext(Integer data) {
+                System.out.println("consumer..." + data);
+                // 处理完之后使用绑定关系开启下一轮订阅
+                this.subscription.request(1);
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                System.out.println("error..." + error);
+            }
+
+            @Override
+            public void onComplete() {
+                System.out.println("complete... done");
+            }
+        });
+
+        System.out.println();
+        Thread.sleep(2000);
+
+        // 6、使用BaseSubscriber接口来进行消费，这个算是对5的增强，一般情况下也采用这个写法，因为这里不需要开发者保存绑定关系，内置了对绑定关系的维护，
+        //    而接口通常需要实现方法均为hookOnXXX的钩子函数，可实现“当开始订阅时”、“数据流订阅时”、“数据流订阅完成时”、“数据流订阅异常时”、“数据流订阅取消时”、“数据流最终执行程序”，
+        //    如果流没有设置异常处理机制并遇到异常，会处理异常，无论异常之后是否开启订阅，整个数据流都会被终止，执行最终执行的代码。
+        flux.subscribe(new BaseSubscriber<Integer>() {
+            @Override
+            protected void hookOnSubscribe(Subscription subscription) {
+                System.out.println("subscribe...");
+                // 手动开启首轮订阅，即：从数据流中取出第1/n个数据
+                request(1);
+                // 从数据流取出所有数据，如果这里采用全部取出，那么在这个接口实现过程中，所有方法就不再需要使用request()开启下一轮订阅
+                //requestUnbounded();
+            }
+
+            @Override
+            protected void hookOnNext(Integer data) {
+                System.out.println("consumer..." + data);
+                if (data == 6){
+                    // 当data等于6时，取消订阅
+                    cancel();
+                }
+                // 再次开启下一轮订阅
+                request(1);
+            }
+
+            @Override
+            protected void hookOnComplete() {
+                System.out.println("complete... done");
+            }
+
+            @Override
+            protected void hookOnError(Throwable error) {
+                System.out.println("error..." + error);
+            }
+
+            @Override
+            protected void hookOnCancel() {
+                System.out.println("cancel... done");
+            }
+
+            @Override
+            protected void hookFinally(SignalType type) {
+                System.out.println("finally..." + type);
+            }
+        });
+
+    }
+
+    /**
      * 方法入口
      *
      * @param args 参数
      * @author AntonyCheng
      */
-    public static void main(String[] args) throws IOException {
-        flux();
-
-        while (true) {
-
-        }
+    public static void main(String[] args) throws Exception {
+//        flux();
+//        create();
+        subscribe();
+        System.in.read();
     }
 
 }
