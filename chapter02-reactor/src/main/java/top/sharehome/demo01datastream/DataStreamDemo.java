@@ -1,21 +1,18 @@
 package top.sharehome.demo01datastream;
 
-import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
-import reactor.core.Disposable;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import reactor.core.publisher.ParallelFlux;
 import reactor.core.publisher.SignalType;
 import reactor.core.scheduler.Schedulers;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ThreadFactory;
 import java.util.stream.Stream;
 
 /**
@@ -94,29 +91,29 @@ public class DataStreamDemo {
     }
 
     /**
-     * 2、数据流的创建，以不同方式创建1-10的数据流
+     * 2、数据流的创建，以不同方式创建1-10的数据流，
      */
     private static void create() {
 
-        // 1、使用just创建数据流
+        // 1、使用just创建数据流（默认同步创建，可同步/异步操作，大白话：单线程向Flux中添加进而创建流，然后允许转换为异步数据流去执行）
         Flux<Integer> just = Flux.just(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
-        just.subscribe();
+        just.subscribe(data -> System.out.println(Thread.currentThread().getName() + "-just-" + data));
 
-        // 2、使用range创建数据流
+        // 2、使用range创建数据流（默认同步创建，可同步/异步操作，大白话：单线程向Flux中添加进而创建流，然后允许转换为异步数据流去执行）
         Flux<Integer> range = Flux.range(1, 10);
-        range.subscribe();
+        range.subscribe(data -> System.out.println(Thread.currentThread().getName() + "-range-" + data));
 
-        // 3、使用fromStream创建数据流
+        // 3、使用fromStream创建数据流（默认同步创建，可同步/异步操作，大白话：单线程向Flux中添加进而创建流，然后允许转换为异步数据流去执行）
         Stream<Integer> integerStream = Stream.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
         Flux<Integer> fromStream = Flux.fromStream(integerStream);
-        fromStream.subscribe();
+        fromStream.subscribe(data -> System.out.println(Thread.currentThread().getName() + "-fromStream-" + data));
 
-        // 4、使用fromArray创建数据流
+        // 4、使用fromArray创建数据流（默认同步创建，可同步/异步操作，大白话：单线程向Flux中添加进而创建流，然后允许转换为异步数据流去执行）
         Integer[] ints = new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         Flux<Integer> fromArray = Flux.fromArray(ints);
-        fromArray.subscribe();
+        fromArray.subscribe(data -> System.out.println(Thread.currentThread().getName() + "-fromArray-" + data));
 
-        // 5、使用fromIterable创建数据流
+        // 5、使用fromIterable创建数据流（默认同步创建，可同步/异步操作，大白话：单线程向Flux中添加进而创建流，然后允许转换为异步数据流去执行）
         List<Integer> iterator = new ArrayList<Integer>() {
             {
                 for (int i = 1; i < 11; i++) {
@@ -125,16 +122,54 @@ public class DataStreamDemo {
             }
         };
         Flux<Integer> fromIterable = Flux.fromIterable(iterator);
-        fromIterable.subscribe();
+        fromIterable.subscribe(data -> System.out.println(Thread.currentThread().getName() + "-fromIterable-" + data));
 
-        // 6、使用响应式流创建数据流
+        // 6、使用响应式流创建数据流（默认同步创建，可同步/异步操作，大白话：单线程向Flux中添加进而创建流，然后允许转换为异步数据流去执行）
         Flux<Integer> from = Flux.from(Flux.just(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
-        from.subscribe();
+        from.subscribe(data -> System.out.println(Thread.currentThread().getName() + "-from-" + data));
+
+        // 7、使用generate创建数据流（自定义同步创建，可同步/异步操作，大白话：单线程向Flux中添加进而创建流，然后允许转换为异步数据流去执行）
+        Flux<Integer> generate = Flux.generate(
+                // 创建初始值，建议创建为数据流中数据类型的初始值
+                () -> 0,
+                (data, sink) -> {
+                    // 迭代式处理数据
+                    data += 1;
+                    sink.next(data);
+                    if (data == 10) {
+                        sink.complete();
+                    }
+                    return data;
+                }
+        );
+        generate.subscribe(data -> System.out.println(Thread.currentThread().getName() + "-generate-" + data));
+
+        // 8、使用create创建数据流（自定义同步/异步创建，可同步/异步操作，大白话：可以选择n个线程向Flux中添加进而创建流，然后允许转换为同步/异步数据流去执行）
+        // 创建线程工厂，为多线程多准备
+        ThreadFactory virtualFactory = Thread.ofVirtual().factory();
+        ThreadFactory platformFactory = Thread.ofPlatform().factory();
+        Flux<Integer> create = Flux.create(sink -> {
+            for (int i = 0; i < 10; i++) {
+                int finalI = i;
+                platformFactory.newThread(() -> {
+                    if (finalI>4) {
+                        sink.next(finalI + 1);
+                    }
+                }).start();
+                virtualFactory.newThread(() -> {
+                    if (finalI<=4){
+                        sink.next(finalI + 1);
+                    }
+                }).start();
+            }
+        });
+        create.subscribe(data -> System.out.println((Thread.currentThread().isVirtual() ? "virtual-thread-" : Thread.currentThread().getName()) + "-create-" + data));
 
     }
 
     /**
      * 3、流的订阅
+     * 在Reactor中一共有六种常用的订阅方法，前四种属于默认订阅，后两种属于自定义订阅。
      */
     private static void subscribe() throws InterruptedException {
 
@@ -229,7 +264,7 @@ public class DataStreamDemo {
             @Override
             protected void hookOnNext(Integer data) {
                 System.out.println("consumer..." + data);
-                if (data == 6){
+                if (data == 6) {
                     // 当data等于6时，取消订阅
                     cancel();
                 }
@@ -261,6 +296,53 @@ public class DataStreamDemo {
     }
 
     /**
+     * 4、流的重塑
+     * 在Reactor中有一些对上游数据流进行重塑的功能，主要是：批量操作和限流。
+     */
+    private static void reshape() {
+
+        // 1、批量操作，在Reactor中批量操作就是新建缓冲区，数据不再是以单个数据为单位，而是单个缓冲区，即request(1)开启一轮订阅不再是取一个数据，而是取一个缓冲区的数据
+        //    取出的缓冲区类型是一个ArrayList集合类型，需要注意批量操作仅仅是对流中的数据进行整合，并没有限制流的速度，不要理解成只要有缓存就会有效率变动，这里的缓存主要作用是整合数据。
+        // 创建一个批量操作演示数据流
+        Flux<Integer> bufferFlux = Flux.range(1, 10);
+        bufferFlux
+                // 在此打印日志是为了查看数据流被操作的情况
+                .log()
+                // 没有参数的缓冲区大小默认为最大大小（Integer.MAX_VALUE），即没有缓冲区
+                .buffer()
+                .subscribe(System.out::println);
+        bufferFlux
+                // 在此打印日志是为了查看数据流被操作的情况
+                .log()
+                // 设置参数之后就以参数作为缓冲区大小，即每轮订阅取出3个数据组成1个ArrayList集合进行操作
+                .buffer(3)
+                .subscribe(System.out::println);
+
+        // 2、限流操作，对于RabbitMQ消息队列的限流而言就是设置一个阈值，消费者每次从队列中取出小于等于阈值的个数，其实在Reactor中限流原理大同小异
+        //    在Reactor中限流限制的就是订阅者request请求轮数，并且按照75%阈值进行订阅，假设有200个数据流，设定限流40个，request情况就是：40->30->30->30->30->30->30，
+        //    即第一次取出限制个数，之后每当订阅完限制个数的75%时，就再取出限制个数的75%，直到流被订阅完为止，这个限流是对发布者的数据流进行设置的，所以订阅者中request操作对整个过程无效。
+        Flux.range(1, 1000)
+                // 在此打印日志是为了查看数据流被操作的情况
+                .log()
+                // 限制流量
+                .limitRate(100)
+                .subscribe(new BaseSubscriber<Integer>() {
+                    @Override
+                    protected void hookOnSubscribe(Subscription subscription) {
+                        // 不影响限流操作
+                        request(20);
+                    }
+
+                    @Override
+                    protected void hookOnNext(Integer value) {
+                        // 不影响限流操作
+                        request(200);
+                    }
+                });
+
+    }
+
+    /**
      * 方法入口
      *
      * @param args 参数
@@ -268,8 +350,9 @@ public class DataStreamDemo {
      */
     public static void main(String[] args) throws Exception {
 //        flux();
-//        create();
-        subscribe();
+        create();
+//        subscribe();
+//        reshape();
         System.in.read();
     }
 
