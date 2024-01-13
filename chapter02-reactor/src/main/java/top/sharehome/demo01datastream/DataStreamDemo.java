@@ -4,15 +4,18 @@ import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.ParallelFlux;
 import reactor.core.publisher.SignalType;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 /**
@@ -152,12 +155,12 @@ public class DataStreamDemo {
             for (int i = 0; i < 10; i++) {
                 int finalI = i;
                 platformFactory.newThread(() -> {
-                    if (finalI>4) {
+                    if (finalI > 4) {
                         sink.next(finalI + 1);
                     }
                 }).start();
                 virtualFactory.newThread(() -> {
-                    if (finalI<=4){
+                    if (finalI <= 4) {
                         sink.next(finalI + 1);
                     }
                 }).start();
@@ -168,7 +171,167 @@ public class DataStreamDemo {
     }
 
     /**
-     * 3、流的订阅
+     * 3、数据流的自定义处理，这里着重介绍handle的用法
+     * 这个方法的优势就在于它将流的常用操作（map、flatMap等等）都能融入进来
+     */
+    private static void handle() {
+
+        // 首先创建一个流
+        Flux<Integer> generate = Flux.generate(
+                () -> 0,
+                (data, sink) -> {
+                    data += 1;
+                    if (data == 10) {
+                        sink.complete();
+                    }
+                    sink.next(data);
+                    return data;
+                });
+
+        // 然后对流进行处理
+        Flux<List> handle = generate.handle((data, sink) -> {
+            // 假设这里根据data从数据库查出一个List数据
+            List<Integer> list = Collections.singletonList(data);
+            System.out.println(list);
+            // 转换之后直接将数据放入sink中，如果没有处理的数据就不需要执行sink.next()
+            // 由于这里是同步Sink，所以只能调用一次sink.next方法
+            sink.next(list);
+        });
+
+        // 最后对其进行订阅
+        handle.subscribe(System.out::println);
+
+    }
+
+    /**
+     * 4、数据流的线程模型和调度器（线程池）
+     * 数据流的创建以及中间操作默认使用当前线程，在Reactor中多线程都需要额外维护调度器（线程池）
+     */
+    private static void thread() {
+
+        // 1、了解一下Reactor中的常用调度器
+        // （1）单线程池
+        //      1）默认当前线程
+        Scheduler immediate = Schedulers.immediate();
+        //      2）另外开一个单线程
+        Scheduler single1 = Schedulers.single();
+        //      3）另外开一个名为single的单线程
+        Scheduler single2 = Schedulers.newSingle("single");
+        // （2）多线程池
+        //      1）另外开启一个有界的线程池，默认参数为CPU核心数量10倍的workers，100k个队列，60秒空闲时间
+        Scheduler boundedElastic1 = Schedulers.boundedElastic();
+        //      2）另外开启一个有界的线程池，参数为10个workers，1k个队列，名称为“boundedElastic2”，60秒空闲时间
+        Scheduler boundedElastic2 = Schedulers.newBoundedElastic(10, 1000, "boundedElastic2", 60);
+        //      3）另外开启一个自定义的10-100线程，60秒空闲时间，有10k个队列的线程池
+        Scheduler fromExecutor = Schedulers.fromExecutor(
+                new ThreadPoolExecutor(
+                        10,
+                        100,
+                        60,
+                        TimeUnit.SECONDS,
+                        new LinkedBlockingDeque<>(10000))
+        );
+        // （3）并发线程池（基于Fork-Join模型建立并发）
+        //      1）开启一个线程数为CPU核心数的并发线程池
+        Scheduler parallel1 = Schedulers.parallel();
+        //      2）开启一个线程数为20的并发线程池，注意：线程数最大值即为CPU核心数，超出部分无效
+        Scheduler parallel2 = Schedulers.newParallel("parallel", 20);
+
+        // 2、了解一下publishOn(Scheduler)和subscribeOn(Scheduler)这两个设置线程调度策略的方法，它们主要强调线程池的概念。
+        // 先将数据流处理代码分为三个阶段：
+        // Flux.range()       ==>  数据流创建阶段（必要）
+        //     .handle1()     ==>  数据流处理阶段1（非必要）
+        //     .handle2()     ==>  数据流处理阶段2（非必要）
+        //     .subscribe()   ==>  数据流订阅阶段（必要）
+        // （1）数据流创建阶段一定是在当前线程进行的；
+        // （2）publishOn(Scheduler)方法是将Scheduler调度器范围覆盖于publishOn()方法下的数据链（除自定义subscribe中OnHookSubscribe()和request()方法外）；
+        // （3）subscribeOn(Scheduler)方法是将Scheduler调度器范围覆盖至全局；
+        // （4）若两者一起使用，两者前后顺序不重要，但publishOn()方法的覆盖优先级大于subscribeOn()方法；
+        // （5）通常而言subscribeOn()方法对于一个数据流使用一次即可，但是publishOn方法可以根据功能位置的需求多次使用，改变线程调度器；
+        // 下面举一些例子：
+        Flux.range(1, 2)  // main
+                .handle((data,sink)->{})  // single2
+                .handle((data,sink)->{})  // single2
+                .publishOn(Schedulers.newSingle("single1"))
+                .subscribeOn(Schedulers.newSingle("single2"))
+                .subscribe();  // single1
+        Flux.range(1, 2)  // main
+                .handle((data,sink)->{})  // single2
+                .publishOn(Schedulers.newSingle("single1"))
+                .handle((data,sink)->{})  // single1
+                .subscribeOn(Schedulers.newSingle("single2"))
+                .subscribe();  // single1
+        Flux.range(1, 2)  // main
+                .publishOn(Schedulers.newSingle("single1"))
+                .handle((data,sink)->{})  // single1
+                .handle((data,sink)->{})  // single1
+                .subscribeOn(Schedulers.newSingle("single2"))
+                .subscribe();  // single1
+        Flux.range(1, 2)  // main
+                .publishOn(Schedulers.newSingle("single1"))
+                .subscribeOn(Schedulers.newSingle("single2"))
+                .handle((data,sink)->{})  // single1
+                .handle((data,sink)->{})  // single1
+                .subscribe();  // single1
+        Flux.range(1, 2)  // main
+                .handle((data,sink)->{})  // single2
+                .handle((data,sink)->{})  // single2
+                .subscribeOn(Schedulers.newSingle("single2"))
+                .subscribe();  // single2
+        Flux.range(1, 2)  // main
+                .handle((data,sink)->{})  // main
+                .publishOn(Schedulers.newSingle("single1"))
+                .handle((data,sink)->{})  // single1
+                .subscribe();  // single1
+
+        // 3、了解一下parallel().runOn(Scheduler)设置线程调度策略的方法，它主要强调并发的概念。
+        // 这个方法是让Flux快速拥有并发能力，一旦使用了parallel()方法，Flux类型就会转变为ParallelFlux类型，
+        // ParallelFlux类型中有两个常用方法：
+        // （1）runOn(Scheduler)方法：用来设置调度策略；
+        // （2）sequential()方法：将并发状态转变为非并发状态，从ParallelFlux类型转变为Flux类型，但是改变后所在线程依旧是并发状态的线程，只是线程之间不能并发了而已；
+        // 这种方法开启并发是最直接的，它的作用域覆盖于runOn()方法下的数据链，如果存在sequential()方法，那么作用域就在runOn()和sequential()之间，
+        // 由于对数据流的操作是用ParallelFlux类型，一些Flux类型的方法就不再适用，所以不建议runOn()方法下的数据链在不存在sequential()方法的情况下和publishOn()或者subscribeOn()方法一起用。
+        Flux.range(1,10)
+                // 开启CPU核数的线程的并发状态
+                .parallel().runOn(Schedulers.parallel()).sequential()
+                .subscribe(data->{
+                    System.out.println(Thread.currentThread().getName());
+                });
+        Flux.range(1,10)
+                // 开启2条线程的并发状态
+                .parallel(2).runOn(Schedulers.parallel()).sequential()
+                .subscribe(data->{
+                    System.out.println(Thread.currentThread().getName());
+                });
+        Flux.range(1,10)
+                // 开启2条名为parallel的线程的并发状态
+                .parallel(2).runOn(Schedulers.newParallel("parallel")).sequential()
+                .subscribe(data->{
+                    System.out.println(Thread.currentThread().getName());
+                });
+        Flux.range(1,10)
+                // 开启2条名为parallel的线程的并发状态
+                .parallel().runOn(Schedulers.newParallel("parallel",2)).sequential()
+                .subscribe(data->{
+                    System.out.println(Thread.currentThread().getName());
+                });
+        Flux.range(1,10)
+                // 开启2条名为parallel的线程的并发状态
+                .parallel(2).runOn(Schedulers.newParallel("parallel",4)).sequential()
+                .subscribe(data->{
+                    System.out.println(Thread.currentThread().getName());
+                });
+        Flux.range(1,10)
+                // 开启2条名为parallel的线程的并发状态
+                .parallel(2).runOn(Schedulers.newParallel("parallel",1)).sequential()
+                .subscribe(data->{
+                    System.out.println(Thread.currentThread().getName());
+                });
+
+    }
+
+    /**
+     * 5、数据流的订阅
      * 在Reactor中一共有六种常用的订阅方法，前四种属于默认订阅，后两种属于自定义订阅。
      */
     private static void subscribe() throws InterruptedException {
@@ -296,7 +459,7 @@ public class DataStreamDemo {
     }
 
     /**
-     * 4、流的重塑
+     * 6、数据流的重塑
      * 在Reactor中有一些对上游数据流进行重塑的功能，主要是：批量操作和限流。
      */
     private static void reshape() {
@@ -350,7 +513,9 @@ public class DataStreamDemo {
      */
     public static void main(String[] args) throws Exception {
 //        flux();
-        create();
+//        create();
+//        handle();
+        thread();
 //        subscribe();
 //        reshape();
         System.in.read();
