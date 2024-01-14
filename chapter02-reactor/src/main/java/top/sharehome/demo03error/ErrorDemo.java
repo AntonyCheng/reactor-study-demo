@@ -4,6 +4,9 @@ import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
+import java.time.Duration;
+
 /**
  * 错误处理示例代码
  * 错误是在大部分情况下是一种中断，在以往的学习中也接触过以下错误处理：
@@ -78,6 +81,7 @@ public class ErrorDemo {
      * 特点：吃掉错误，订阅者无错误感知，返回一个数据流，并且让数据流正常完成，但是数据流传输会终止于错误元素。
      */
     private static void catchAndFallbackMethod() {
+        // 使用onErrorResume方法
         Flux.just(1, 2, 0, 4)
                 .map(data -> 100 / data)
                 .onErrorResume(throwable -> fallbackMethod())
@@ -174,7 +178,7 @@ public class ErrorDemo {
      * 特点：抓取错误并记录日志，然后进行下一轮的订阅，让数据流正常完成。
      */
     private static void catchAndLogThenIgnore() {
-        // 使用doOnError方法记录日志
+        // 使用onErrorContinue方法记录日志
         Flux.just(1, 2, 0, 4)
                 .map(data -> 100 / data)
                 .onErrorContinue((throwable, data) -> {
@@ -188,13 +192,28 @@ public class ErrorDemo {
     }
 
     /**
-     * 9、抓取错误之后，不做任何处理，立刻完成整个数据流的传输
+     * 9、抓取错误之后，不做任何处理，立刻正常完成整个数据流的传输
      */
     private static void catchAndHandleThenComplete() {
-        // 使用doOnError方法记录日志
+        // 使用onErrorComplete方法记录日志
         Flux.just(1, 2, 0, 4)
                 .map(data -> 100 / data)
                 .onErrorComplete()
+                .subscribe(data -> {
+                    System.out.println("onNext: " + data);
+                }, throwable -> {
+                    System.out.println("onError: " + throwable);
+                });
+    }
+
+    /**
+     * 9、抓取错误之后，不做任何处理，立刻异常完成整个数据流的传输
+     */
+    private static void catchAndHandleThenStop() {
+        // 使用onErrorStop方法记录日志
+        Flux.just(1, 2, 0, 4)
+                .map(data -> 100 / data)
+                .onErrorStop()
                 .subscribe(data -> {
                     System.out.println("onNext: " + data);
                 }, throwable -> {
@@ -208,7 +227,7 @@ public class ErrorDemo {
      * @param args 参数
      * @author AntonyCheng
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 //        easyError();
 //        directError();
 //        catchAndReturnStaticDefault();
@@ -218,6 +237,8 @@ public class ErrorDemo {
 //        catchAndHandleThenFinally();
 //        catchAndLogThenIgnore();
         catchAndHandleThenComplete();
+
+        System.in.read();
     }
 
 }
