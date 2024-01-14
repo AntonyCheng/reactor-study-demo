@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 常规方法示例代码
  * 在这里会介绍一些Reactor中常用到的一些方法：
  * filter、flatMap、concatMap、flatMapMany、transform、defaultIfEmpty、switchIfEmpty、concat、
- * concatWith、merge、mergeWith、mergeSequential、zip、zipWith
+ * concatWith、merge、mergeWith、mergeSequential、zip、zipWith、timeout、retry
  *
  * @author AntonyCheng
  */
@@ -182,12 +182,18 @@ public class ApisDemo {
         System.out.println("defaultIfEmpty&switchIfEmpty... Done\n");
 
         /*
-        zip 将n（最大值为8）个流压缩成包含元素数量最小流个数的n元组流
+        1、zip 将n（最大值为8）个流压缩成包含元素数量最小流个数的n元组流
         例如：
         flux1 ==> 1 2 3 4 5
         flux2 ==> 2 5 6 7
         flux3 ==> 3 8
         zip的最终结果是：[1,2,3] [2,5,8]
+        2、zipWith 将当前流和另一个流压缩成包含元素数量最小流个数的2元组流
+        例如：
+        current ==> 1 2 3 4 5
+        once    ==> 2 5 6 7   ==> result:[1,2] [2,5] [3,6] [4,7]
+        again   ==> 3 8       ==> result:[[1,2],3] [[2,5],8]
+        zipWith的最终结果是：[[1,2],3] [[2,5],8]
          */
         Flux.zip(
                         Flux.just(1, 2, 3, 4, 5),
@@ -197,6 +203,15 @@ public class ApisDemo {
                 .log()
                 .map(tuple3 -> {
                     return tuple3.getT1() + "-" + tuple3.getT2() + "-" + tuple3.getT3();
+                })
+                .log()
+                .subscribe();
+        Flux.just(1, 2, 3, 4, 5)
+                .zipWith(Flux.just("2", "5", "6", "7"))
+                .zipWith(Flux.just('3', '8'))
+                .log()
+                .map(tuple3 -> {
+                    return tuple3.getT1().getT1() + "-" + tuple3.getT1().getT2() + "-" + tuple3.getT2();
                 })
                 .log()
                 .subscribe();

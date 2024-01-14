@@ -207,7 +207,7 @@ public class ErrorDemo {
     }
 
     /**
-     * 9、抓取错误之后，不做任何处理，立刻异常完成整个数据流的传输
+     * 10、抓取错误之后，不做任何处理，立刻异常完成整个数据流的传输
      */
     private static void catchAndHandleThenStop() {
         // 使用onErrorStop方法记录日志
