@@ -1,13 +1,11 @@
 package top.sharehome.demo02apis;
 
-import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -19,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @author AntonyCheng
  */
-public class ApisDemo {
+public class CommonApisDemo {
 
     /**
      * 方法入口
