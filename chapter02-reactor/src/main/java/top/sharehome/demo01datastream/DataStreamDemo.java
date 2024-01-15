@@ -515,9 +515,9 @@ public class DataStreamDemo {
 //        flux();
 //        create();
 //        handle();
-        thread();
+//        thread();
 //        subscribe();
-//        reshape();
+        reshape();
         System.in.read();
     }
 
