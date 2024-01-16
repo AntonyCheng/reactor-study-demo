@@ -7,13 +7,13 @@ import top.sharehome.demo.model.entity.SpecieDataFile;
 import top.sharehome.demo.service.SpecieDataFileService;
 
 /**
-* @author PC
-* @description 针对表【specie_data_file(物种数据文件存储表)】的数据库操作Service实现
-* @createDate 2024-01-09 09:03:38
-*/
+ * 物种数据文件接口实现类
+ *
+ * @author AntonyCheng
+ */
 @Service
 public class SpecieDataFileServiceImpl extends ServiceImpl<SpecieDataFileMapper, SpecieDataFile>
-    implements SpecieDataFileService {
+        implements SpecieDataFileService {
 
 }
 

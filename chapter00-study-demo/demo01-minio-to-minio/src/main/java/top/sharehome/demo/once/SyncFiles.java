@@ -4,6 +4,7 @@ import cn.hutool.core.io.IoUtil;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.CommandLineRunner;
@@ -12,7 +13,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 import top.sharehome.demo.mapper.SpecieDataFileMapper;
 
-import javax.annotation.Resource;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -50,6 +50,7 @@ public class SyncFiles implements CommandLineRunner {
 
     /**
      * 假设path是URI，形式为：/桶名称/文件路径.../文件本体
+     *
      * @param path
      * @throws Exception
      */

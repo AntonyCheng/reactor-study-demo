@@ -10,9 +10,9 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 物种数据文件存储表
+ * 物种数据文件实体类
  *
- * @TableName specie_data_file
+ * @author AntonyCheng
  */
 @TableName(value = "specie_data_file")
 @Data
@@ -23,7 +23,7 @@ public class SpecieDataFile implements Serializable {
     /**
      * 主键
      */
-    @TableId(value = "specie_data_file_id",type = IdType.ASSIGN_ID)
+    @TableId(value = "specie_data_file_id", type = IdType.ASSIGN_ID)
     private Long specieDataFileId;
 
     /**

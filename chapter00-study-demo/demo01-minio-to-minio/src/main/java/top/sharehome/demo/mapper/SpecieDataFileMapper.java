@@ -8,11 +8,10 @@ import top.sharehome.demo.model.entity.SpecieDataFile;
 import java.util.List;
 
 /**
-* @author PC
-* @description 针对表【specie_data_file(物种数据文件存储表)】的数据库操作Mapper
-* @createDate 2024-01-09 09:03:38
-* @Entity top.sharehome.demo.model.entity.SpecieDataFile
-*/
+ * 物种数据文件Mapper
+ *
+ * @author AntonyCheng
+ */
 @Mapper
 public interface SpecieDataFileMapper extends BaseMapper<SpecieDataFile> {
 
