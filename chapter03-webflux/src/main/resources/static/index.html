@@ -1,0 +1,34 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+<h1>AntonyCheng</h1>
+<div id="app" style="width: 500px;height: 300px;background-color: cornflowerblue">
+
+</div>
+</body>
+<script>
+    const http = axios.create({
+        baseURL: 'http://localhost:8080/',
+        timeout: 100000000,
+        responseType: 'stream',
+        onDownloadProgress: function (progressEvent) {
+            document.getElementById("app").innerHTML = progressEvent.event.currentTarget.responseText.replaceAll("data:","") +"<br/>"
+        }
+    });
+
+    http.get('/sse')
+        .then(function (response) {
+
+        })
+        .catch(function (error) {
+            console.log(error);
+        })
+        .finally(function () {
+
+        });
+</script>
+</html>

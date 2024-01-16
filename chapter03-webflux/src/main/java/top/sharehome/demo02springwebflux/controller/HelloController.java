@@ -2,6 +2,7 @@ package top.sharehome.demo02springwebflux.controller;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,6 +12,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
@@ -70,14 +72,33 @@ public class HelloController {
      * 这种方式在这里总结一下：
      * 1、返回单个数据使用Mono响应，返回多个数据使用Flux响应；
      * 2、使用Flux还可以实现服务端事件推送（SSE，即Server Send Event），可能单说非常陌生，但是想一想ChatGPT就能够有一些感悟，接下来实现一下；
-     * SSE的实现需要明确指定产生的响应介质类型："text/event-stream"，不然浏览器不会持续接收数据
+     * SSE的实现需要明确指定产生的响应介质类型："text/event-stream"，不然浏览器不会持续接收数据，在static静态资源中有一个index.html文件，直接访问localhost:8080即可查看效果。
      */
     @GetMapping(value = "/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> helloSse(@RequestParam(name = "name", required = false, defaultValue = "default") String name) {
         return Flux.just("Hello! " + name + ", I'm Server Send Event in WebFlux!")
                 // 把内容打散
-                .flatMap(str-> Flux.just(str.split(" ")))
+                .flatMap(str -> Flux.fromArray(str.split(" ")))
                 // 每个内容均延迟发送
+                .delayElements(Duration.ofMillis(1000));
+    }
+
+    /**
+     * 其实对于SSE机制来说它有一种自己的编码方式，即响应Flux<ServerSentEvent<T>>类，
+     * 麻烦一点，但是能够更好的控制传输的数据详细内容，这样发送能够做到更加接近于ChatGPT的接口响应。
+     */
+    @GetMapping(value = "/sse/self", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<String>> helloSseSelf(@RequestParam(name = "name", required = false, defaultValue = "default") String name) {
+        return Flux.just("Hello! " + name + ", I'm Server Send Event in WebFlux!")
+                // 打散为单词
+                .flatMap(str -> Flux.fromArray(str.split(" "))
+                        // 把每个单词转换成ServerSentEvent类
+                        .map(s -> ServerSentEvent.builder(s)
+                                .id(UUID.randomUUID().toString())
+                                .comment("some about this data")
+                                .event("the event that send data")
+                                .build()))
+                // 将每个ServerSentEvent对象延迟发送
                 .delayElements(Duration.ofMillis(1000));
     }
 
