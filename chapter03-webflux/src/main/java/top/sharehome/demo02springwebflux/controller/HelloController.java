@@ -1,5 +1,6 @@
 package top.sharehome.demo02springwebflux.controller;
 
+import com.alibaba.fastjson2.JSON;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
@@ -11,6 +12,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,17 +42,43 @@ public class HelloController {
      * 访问：localhost:8080/helloRouteFunction?name=XXX
      */
     @Bean
-    public RouterFunction<?> helloRouteFunction() {
+    public RouterFunction<?> hello1v1RouteFunction() {
+        // 这是一个Bean中路由和接口一对一的情况
         return route(
-                GET("/helloRouteFunction"),
+                GET("/hello1v1RouteFunction"),
                 request -> {
                     Optional<String> nameOptional = request.queryParam("name");
                     String name = "default";
                     if (nameOptional.isPresent()) {
                         name = nameOptional.get();
                     }
-                    return ok().body(Mono.just("Hello! " + name + ", I'm RouterFunction in WebFlux!"), String.class);
+                    return ok().body(Mono.just("Hello! " + name + ", I'm 1v1 RouterFunction in WebFlux!"), String.class);
                 });
+    }
+
+    @Bean
+    public RouterFunction<?> hello1vNRouteFunction() {
+        // 这是一个Bean中路由和接口一对多的情况
+        return route()
+                .GET("/hello1vNRouteFunction1", request -> {
+                    Optional<String> nameOptional = request.queryParam("name");
+                    String name = "default";
+                    if (nameOptional.isPresent()) {
+                        name = nameOptional.get();
+                    }
+                    return ok().body(Mono.just("Hello! " + name + ", I'm 1vN RouterFunctionGet in WebFlux!"), String.class);
+                })
+                .POST("/hello1vNRouteFunction2", request -> {
+                    return ok().body(request.bodyToMono(String.class)
+                            .map(json -> JSON.parseObject(json, HashMap.class).get("name"))
+                            .defaultIfEmpty("default")
+                            .onErrorReturn("default")
+                            .map(n -> "Hello! " + n + ", I'm 1vN RouterFunctionPost in WebFlux!"), String.class);
+                }).build();
+    }
+
+    public static void main(String[] args) {
+        JSON.parseObject("{}", HashMap.class).get("name");
     }
 
     /**
