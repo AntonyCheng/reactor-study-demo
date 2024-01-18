@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.server.RouterFunction;
@@ -26,7 +27,8 @@ import static org.springframework.web.reactive.function.server.ServerResponse.ok
  * @author AntonyCheng
  */
 @RestController
-public class HelloController {
+@RequestMapping("/hello")
+public class Demo01HelloController {
 
     /**
      * 过去Servlet的方法或者注解在这里也能够使用，WebFlux兼容大部分Servlet的方法
@@ -77,10 +79,6 @@ public class HelloController {
                 }).build();
     }
 
-    public static void main(String[] args) {
-        JSON.parseObject("{}", HashMap.class).get("name");
-    }
-
     /**
      * 最推荐的写法就是按照Servlet习惯使用WebFlux响应
      * 其实很简单，就是将需要相应的数据使用Mono或者Flux封装上返回即可
@@ -114,6 +112,7 @@ public class HelloController {
     /**
      * 其实对于SSE机制来说它有一种自己的编码方式，即响应Flux<ServerSentEvent<T>>类，
      * 麻烦一点，但是能够更好的控制传输的数据详细内容，这样发送能够做到更加接近于ChatGPT的接口响应。
+     * 说明：SSE是单工通信，WebSocket是双工通信
      */
     @GetMapping(value = "/sse/self", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> helloSseSelf(@RequestParam(name = "name", required = false, defaultValue = "default") String name) {
