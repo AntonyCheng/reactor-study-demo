@@ -1,18 +1,18 @@
 package top.sharehome.demo02springwebflux.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import org.springframework.http.HttpEntity;
-import org.springframework.web.bind.annotation.*;
+
+import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebSession;
-import reactor.core.publisher.Mono;
-import reactor.netty.http.server.HttpServerRequest;
 
 /**
  * WebFlux参数演示控制器
- * 主要对比一些和SpringMVC中不一样的控制器参数：请求、响应以及Session；
+ * 主要对比一些和SpringMVC中不一样的控制器参数：请求响应、Session以及文件参数；
+ * 在SpringMVC中请求响应、Session以及文件参数分别对应的是：（HttpServletRequest&HttpServletResponse）、HttpSession以及MultipartFile。
+ * 在WebFlux中请求响应、Session以及文件参数分别对应的是：   ServerWebExchange、WebSession以及FilePart。
  * 其他的参数两者均兼容。
  *
  * @author AntonyCheng
@@ -21,32 +21,20 @@ import reactor.netty.http.server.HttpServerRequest;
 @RequestMapping("/params")
 public class Demo03ParamsController {
 
-    @GetMapping("/mvc/request/response")
-    public String getRequestResponseByMvc(
+    @PostMapping("/default")
+    public String getDefaultParams(
             // 获取请求响应
-            HttpServletRequest request, HttpServletResponse response,
+            ServerWebExchange exchange,
             // 获取Session
-            HttpSession session
+            WebSession session,
+            // 获取文件参数
+            FilePart filePart
     ) {
-        System.out.println("request = " + request);
-        System.out.println("response = " + response);
+        System.out.println("exchange.getRequest() = " + exchange.getRequest());
+        System.out.println("exchange.getResponse() = " + exchange.getResponse());
         System.out.println("session = " + session);
+        System.out.println("filePart.filename() = " + filePart.filename());
         return "OK";
-    }
-
-    @GetMapping("/flux/request/response")
-    public Mono<String> getRequestResponseByFlux(
-            // 获取请求响应
-            ServerWebExchange exchange, HttpServerRequest request, HttpServletResponse response,
-            // 获取Session
-            WebSession session
-    ) {
-        System.out.println("request in exchange = " + exchange.getRequest());
-        System.out.println("response in exchange = " + exchange.getResponse());
-        System.out.println("request = " + request);
-        System.out.println("response = " + response);
-        System.out.println("session = " + session);
-        return Mono.just("OK");
     }
 
 }

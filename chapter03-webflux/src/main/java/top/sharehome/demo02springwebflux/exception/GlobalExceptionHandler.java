@@ -14,7 +14,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(RuntimeException.class)
     public Mono<String> exceptionHandler(RuntimeException e) {
-        return Mono.just("Global exception handler... " + e.getClass());
+        return Mono.just("Global exception handler... " + e.getMessage());
     }
 
 }
+
