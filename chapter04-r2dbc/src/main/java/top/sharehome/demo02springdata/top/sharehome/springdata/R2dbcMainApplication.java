@@ -3,6 +3,7 @@ package top.sharehome.demo02springdata.top.sharehome.springdata;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.r2dbc.config.EnableR2dbcAuditing;
+import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 
 /**
  * 启动类
@@ -17,6 +18,8 @@ import org.springframework.data.r2dbc.config.EnableR2dbcAuditing;
  * @author AntonyCheng
  */
 @SpringBootApplication
+// 开启R2DBC的Repository仓库，以便直接使用SpringBoot Data中的父接口方法
+@EnableR2dbcRepositories
 public class R2dbcMainApplication {
 
     public static void main(String[] args) {

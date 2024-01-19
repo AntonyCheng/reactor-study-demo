@@ -10,6 +10,25 @@ spring:
     username: root
     # MySQL 密码
     password: 123456
+    # 配置连接池
     pool:
       # 开启连接池
       enabled: true
+      # 连接池最小连接数量
+      min-idle: 10
+      # 连接池最大连接数量
+      max-size: 25
+      # 连接超时时间
+      max-create-connection-time: 30s
+      # 空闲连接存货最大时间
+      max-idle-time: 10m
+      # 连接最长寿命周期
+      max-life-time: 30m
+      # 校验超时时间
+      max-validation-time: 5s
+      # 检测连接是否有效
+      validation-query: SELECT 1 FROM DUAL
+# 调整日志级别，让其打印SQL
+logging:
+  level:
+    org.springframework.r2dbc.core: DEBUG

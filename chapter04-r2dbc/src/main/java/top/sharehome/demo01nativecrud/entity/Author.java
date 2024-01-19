@@ -25,10 +25,10 @@ public class Author implements Serializable {
     @Serial
     private static final long serialVersionUID = -7646905657624355586L;
 
-//    @Column("id")
+    @Column("id")
     private Long id;
 
-//    @Column("name")
+    @Column("name")
     private String name;
 
 }

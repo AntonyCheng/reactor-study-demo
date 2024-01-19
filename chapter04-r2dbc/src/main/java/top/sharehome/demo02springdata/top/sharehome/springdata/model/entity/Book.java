@@ -1,10 +1,11 @@
-package top.sharehome.demo02springdata.top.sharehome.springdata.entity;
+package top.sharehome.demo02springdata.top.sharehome.springdata.model.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -26,7 +27,7 @@ public class Book implements Serializable {
     @Serial
     private static final long serialVersionUID = -6542893977053156200L;
 
-    @Column("id")
+    @Id
     private Long id;
 
     @Column("title")
