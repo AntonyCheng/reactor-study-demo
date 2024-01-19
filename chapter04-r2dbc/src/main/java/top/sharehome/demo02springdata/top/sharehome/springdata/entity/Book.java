@@ -1,6 +1,7 @@
-package top.sharehome.demo01nativecrud.entity;
+package top.sharehome.demo02springdata.top.sharehome.springdata.entity;
 
 import lombok.AllArgsConstructor;
+import lombok.CustomLog;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
@@ -11,24 +12,30 @@ import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 作者实体类
+ * 书籍实体类
  *
  * @author AntonyCheng
  */
-@Table("t_author")
+@Table("t_book")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Accessors(chain = true)
-public class Author implements Serializable {
+public class Book implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = -7646905657624355586L;
+    private static final long serialVersionUID = -6542893977053156200L;
 
-//    @Column("id")
+    @Column("id")
     private Long id;
 
-//    @Column("name")
-    private String name;
+    @Column("title")
+    private String title;
+
+    @Column("author_id")
+    private String authorId;
+
+    @Column("publish_time")
+    private String publishTime;
 
 }

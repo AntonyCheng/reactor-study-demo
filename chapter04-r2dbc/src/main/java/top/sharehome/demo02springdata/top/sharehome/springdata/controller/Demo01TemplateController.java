@@ -12,7 +12,6 @@ import reactor.core.publisher.Flux;
 import top.sharehome.demo02springdata.top.sharehome.springdata.entity.Author;
 
 /**
- * todo: 补充增删查改以及join查询的示例
  * R2DBC Template演示控制器
  * 这里主要演示使用R2dbcEntityTemplate API以及DatabaseClient数据库客户端进行增删查改操作
  *
