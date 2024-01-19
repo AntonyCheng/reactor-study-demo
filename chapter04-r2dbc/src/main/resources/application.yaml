@@ -1,0 +1,15 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: chapter04-r2dbc
+  r2dbc:
+    # MySQL URL
+    url: r2dbc:mysql://localhost:3306/test?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
+    # MySQL 用户名
+    username: root
+    # MySQL 密码
+    password: 123456
+    pool:
+      # 开启连接池
+      enabled: true

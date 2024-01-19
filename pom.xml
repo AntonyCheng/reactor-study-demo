@@ -18,6 +18,7 @@
         <module>chapter02-reactor</module>
         <module>chapter00-study-demo</module>
         <module>chapter03-webflux</module>
+        <module>chapter04-r2dbc</module>
     </modules>
     <packaging>pom</packaging>
 
