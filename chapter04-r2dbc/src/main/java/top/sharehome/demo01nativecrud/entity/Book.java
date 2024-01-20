@@ -9,6 +9,7 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * 书籍实体类
@@ -35,6 +36,6 @@ public class Book implements Serializable {
     private String authorId;
 
     @Column("publish_time")
-    private String publishTime;
+    private LocalDateTime publishTime;
 
 }

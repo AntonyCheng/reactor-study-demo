@@ -161,7 +161,7 @@ public class Demo02SpringDataController {
                                 Long bid = (Long) map.get("bid");
                                 String btitle = (String) map.get("btitle");
                                 ZonedDateTime btime = (ZonedDateTime) map.get("btime");
-                                books.add(new Book(bid, btitle, aid, btime));
+                                books.add(new Book(bid, btitle, aid, btime.toLocalDateTime()));
                             })
                             .then(Mono.just(oneByManyCustomVo.setBookList(books)));
                 })
