@@ -1,0 +1,40 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: chapter05-security
+#  # 配置安全认证，但是一般情况下不会这么用，因为一般情况下用户都需要注册，都会去数据库中查询
+#  security:
+#    user:
+#      name: admin
+#      password: 123456
+  # 配置安全认证
+  r2dbc:
+    # MySQL URL
+    url: r2dbc:mysql://localhost:3306/test?serverZoneId=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
+    # MySQL 用户名
+    username: root
+    # MySQL 密码
+    password: 123456
+    # 配置连接池
+    pool:
+      # 开启连接池
+      enabled: true
+      # 连接池最小连接数量
+      min-idle: 10
+      # 连接池最大连接数量
+      max-size: 25
+      # 连接超时时间
+      max-create-connection-time: 30s
+      # 空闲连接存货最大时间
+      max-idle-time: 10m
+      # 连接最长寿命周期
+      max-life-time: 30m
+      # 校验超时时间
+      max-validation-time: 5s
+      # 检测连接是否有效
+      validation-query: SELECT 1 FROM DUAL
+# 调整日志级别，让其打印SQL
+logging:
+  level:
+    org.springframework.r2dbc.core: DEBUG

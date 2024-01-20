@@ -19,6 +19,7 @@
         <module>chapter00-study-demo</module>
         <module>chapter03-webflux</module>
         <module>chapter04-r2dbc</module>
+        <module>chapter05-security</module>
     </modules>
     <packaging>pom</packaging>
 
