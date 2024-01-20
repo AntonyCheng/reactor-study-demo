@@ -30,7 +30,6 @@ public class Author implements Serializable {
     @Id
     private Long id;
 
-    @Column("name")
     private String name;
 
 }

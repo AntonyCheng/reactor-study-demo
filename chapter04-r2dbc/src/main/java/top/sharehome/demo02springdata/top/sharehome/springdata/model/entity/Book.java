@@ -11,6 +11,8 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 /**
  * 书籍实体类
@@ -30,13 +32,10 @@ public class Book implements Serializable {
     @Id
     private Long id;
 
-    @Column("title")
     private String title;
 
-    @Column("author_id")
-    private String authorId;
+    private Long authorId;
 
-    @Column("publish_time")
-    private String publishTime;
+    private ZonedDateTime publishTime;
 
 }
